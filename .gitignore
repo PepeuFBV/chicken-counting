@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# PyTorch
+*.pth
+*.pt
+*.ckpt
+checkpoints/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Imagens e dados
+input_images/
+outputs/
+data/
+datasets/
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.tiff
+
+# Logs e cache
+logs/
+*.log
+wandb/
+.cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Testes
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Exceções (arquivos que DEVEM ser incluídos)
+!README.md
+!USAGE.md
+
+# Data dir
+data/
