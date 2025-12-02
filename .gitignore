@@ -59,5 +59,9 @@ htmlcov/
 !README.md
 !USAGE.md
 
-# Data dir
+# Data dirs
 data/
+
+# Python virtual environments
+venv/
+.venv/

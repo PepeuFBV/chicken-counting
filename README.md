@@ -50,4 +50,18 @@ Input Image (3×256×256)
 
 ## Quick Start
 
-TODO
+1. Copy the dataset to the `data/` folder (structure: `data/dataset/`, for the images and respective annotations).
+
+2. Create a virtual environment and install dependencies:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+3. Activate the virtual environment with the support script:
+
+```bash
+source scripts/activate_venv.sh
+```
