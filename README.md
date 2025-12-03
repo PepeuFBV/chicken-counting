@@ -18,34 +18,34 @@ This project implements a complete inference system for counting chickens in pou
 ## Model Architecture
 
 ```
-Input Image (3×256×256)
-         ↓
+  Input Image (3×256×256)
+            ↓
 ┌────────────────────────┐
 │   PVT-v2-B2 Backbone   │
-│  (Pyramid Features)     │
+│  (Pyramid Features)    │
 └────────────────────────┘
-         ↓
+            ↓
     [f1, f2, f3, f4]
-         ↓
+            ↓
 ┌────────────────────────┐
 │  Pyramid Feature       │
 │  Aggregation (PFA)     │
 │  - Lateral connections │
 │  - Top-down upsampling │
 └────────────────────────┘
-         ↓
+            ↓
    Aggregated Features
-         ↓
+            ↓
 ┌────────────────────────┐
 │  Multi-Scale Dilated   │
 │  Conv Head (MDC)       │
 │  - Dilation: 1, 2, 3   │
 │  - Fusion + Regression │
 └────────────────────────┘
-         ↓
-  Density Map (1×256×256)
-         ↓
-    Σ = Count
+            ↓
+   Density Map (1×256×256)
+            ↓
+        Σ = Count
 ```
 
 ## Quick Start
@@ -64,4 +64,10 @@ pip install -r requirements.txt
 
 ```bash
 source scripts/activate_venv.sh
+```
+
+4. Run main file:
+
+```bash
+python src/data_treatment/main.py
 ```
