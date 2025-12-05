@@ -62,6 +62,9 @@ htmlcov/
 # Data dirs
 data/
 
+# Docs dirs
+docs/
+
 # Python virtual environments
 venv/
 .venv/
