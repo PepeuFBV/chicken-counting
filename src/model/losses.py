@@ -34,14 +34,18 @@ def _sinkhorn(a: torch.Tensor, b: torch.Tensor, M: torch.Tensor, reg: float = 0.
     NOTE: this is not optimized for very large n. Use downsampled maps.
     """
     # u and v scaling vectors
-    K = torch.exp(-M / reg)
-    Kp = K / a.sum()
+    # add small epsilons to avoid division by zero and underflow
+    eps = 1e-8
+    K = torch.exp(-M / (reg + eps)) + eps
     u = torch.ones_like(a)
     v = torch.ones_like(b)
     for _ in range(iters):
-        u = a / (K @ v)
-        v = b / (K.t() @ u)
+        Kv = K @ v
+        u = a / Kv.clamp(min=eps)
+        Kt_u = K.t() @ u
+        v = b / Kt_u.clamp(min=eps)
     # transport plan
+    # transport plan and cost
     T = torch.diag(u) @ K @ torch.diag(v)
     cost = torch.sum(T * M)
     return cost

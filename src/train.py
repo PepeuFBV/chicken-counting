@@ -123,7 +123,7 @@ def main():
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--lr", type=float, default=1e-5)
-    parser.add_argument("--device", default="cpu")
+    parser.add_argument("--device", default="auto", help="device to run on, e.g. 'cpu', 'cuda', or 'cuda:0'. Use 'auto' to select CUDA when available")
     parser.add_argument("--train_frac", type=float, default=0.8)
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
@@ -131,7 +131,12 @@ def main():
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    device = torch.device(args.device)
+    # allow the user to request automatic device selection
+    if args.device == "auto":
+        device_str = "cuda" if torch.cuda.is_available() else "cpu"
+    else:
+        device_str = args.device
+    device = torch.device(device_str)
 
     loader_full = DatasetLoader(args.data_dir, load_images=False)
     samples = loader_full.as_list()

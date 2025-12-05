@@ -30,7 +30,10 @@ def pil_to_tensor(img: Image.Image, size=(256, 256)):
     return tf(img)
 
 
-def run_inference(weights: str, data_dir: str, out_dir: str, device: str = "cpu"):
+def run_inference(weights: str, data_dir: str, out_dir: str, device: str = "auto"):
+    # allow "auto" to pick cuda when available, otherwise cpu
+    if device == "auto":
+        device = "cuda" if torch.cuda.is_available() else "cpu"
     device = torch.device(device)
     model = ChickenCountingModel(pretrained=False).to(device)
     if weights:
@@ -79,7 +82,7 @@ def main():
     parser.add_argument("--weights", default=None)
     parser.add_argument("--data_dir", default="data/dataset")
     parser.add_argument("--out_dir", default="outputs")
-    parser.add_argument("--device", default="cpu")
+    parser.add_argument("--device", default="auto", help="device to run on, e.g. 'cpu', 'cuda', or 'cuda:0'. Use 'auto' to select CUDA when available")
     args = parser.parse_args()
     run_inference(args.weights, args.data_dir, args.out_dir, args.device)
 
