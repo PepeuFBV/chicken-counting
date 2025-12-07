@@ -12,15 +12,37 @@ from src.data_treatment.augmentation import augment_single
 
 
 def default_pipelines() -> List[List[dict]]:
+    rotation_intervals = [15 * i for i in range(1, 13)]  # 15, 30, ..., 180
+    rotations = [[{"name": "rotate", "angle": angle}] for angle in rotation_intervals]
+    
+    scale_factors = [0.5, 0.75, 0.9, 1.1, 1.25, 1.5]
+    scales = [[{"name": "scale", "sx": sf, "sy": sf}] for sf in scale_factors]
+    
+    noise_levels = [1.0, 2.0, 4.0, 8.0, 12.0]
+    noises = [[{"name": "noise", "sigma": sigma}] for sigma in noise_levels]
+    
+    brightness_levels = [0.2, 0.4, 0.6, 0.8]
+    contrast_levels = [0.2, 0.4, 0.6, 0.8]
+    saturation_levels = [0.2, 0.4, 0.6, 0.8]
+    color_jitters = [
+        [{
+            "name": "color_jitter",
+            "brightness": b,
+            "contrast": c,
+            "saturation": s,
+        }]
+        for b in brightness_levels
+        for c in contrast_levels
+        for s in saturation_levels
+    ]
+    
     return [
         [{"name": "flip_h"}],
         [{"name": "flip_v"}],
-        [{"name": "rotate", "angle": 90}],
-        [{"name": "rotate", "angle": 180}],
-        [{"name": "scale", "sx": 0.9}],
-        [{"name": "scale", "sx": 1.1}],
-        [{"name": "color_jitter", "brightness": 0.2, "contrast": 0.2, "saturation": 0.2}],
-        [{"name": "noise", "sigma": 8.0}],
+        *rotations,
+        *scales,
+        *color_jitters,
+        *noises,
     ]
 
 
@@ -55,7 +77,6 @@ def preprocess_and_get_loader(
         bar_len = 30
         frac = (cur / total_target) if total_target > 0 else 0
         filled = int(bar_len * frac)
-        # build a pretty bar like: [=====>     ]  42%
         if filled >= bar_len:
             bar = "=" * bar_len
         else:

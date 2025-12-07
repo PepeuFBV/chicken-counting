@@ -3,6 +3,7 @@ import json
 import math
 import random
 from typing import List, Tuple, Dict, Any
+from itertools import product
 
 from PIL import Image, ImageEnhance
 import numpy as np
@@ -237,7 +238,7 @@ def augment_single(json_path: str, image_root: str, out_root: str, ops: List[Dic
     save_json(new_data, out_json_path)
 
 
-def augment_dataset(json_dir: str, image_root: str, out_root: str, ops_list: List[List[Dict[str, Any]]], limit: int = None):
+def augment_dataset(json_dir: str, image_root: str, out_root: str, ops_list: List[List[Dict[str, Any]]], limit: int = None, max_combinations: int = 1):
     """
     Apply a list of augmentation pipelines to every json in `json_dir`.
     `ops_list` is a list of op sequences; for each json, each ops sequence will be applied producing one augmented sample.
@@ -248,7 +249,37 @@ def augment_dataset(json_dir: str, image_root: str, out_root: str, ops_list: Lis
         files = files[:limit]
     for fname in files:
         json_path = os.path.join(json_dir, fname)
-        for ops in ops_list:
+        # build list of operation sequences to apply. By default (max_combinations=1)
+        # we use the provided `ops_list` as-is. If `max_combinations` > 1, we
+        # generate ordered combinations (cartesian product) of up to
+        # `max_combinations` items from `ops_list`, concatenating the sequences.
+        combined_ops = []
+        if max_combinations is None or max_combinations <= 1:
+            combined_ops = ops_list
+        else:
+            for r in range(1, max_combinations + 1):
+                for combo in product(ops_list, repeat=r):
+                    # flatten sequences from the combo into a single ops list
+                    ops_flat: List[Dict[str, Any]] = []
+                    for seq in combo:
+                        ops_flat.extend(seq)
+                    combined_ops.append(ops_flat)
+
+        # deduplicate combinations by stable JSON representation
+        unique_ops = []
+        seen = set()
+        for ops in combined_ops:
+            try:
+                key = json.dumps(ops, sort_keys=True, separators=(",", ":"))
+            except Exception:
+                # fallback: use repr if something odd appears
+                key = repr(ops)
+            if key in seen:
+                continue
+            seen.add(key)
+            unique_ops.append(ops)
+
+        for ops in unique_ops:
             try:
                 augment_single(json_path, image_root, out_root, ops)
             except Exception as e:
@@ -279,4 +310,5 @@ if __name__ == "__main__":
 
     limit = 50  # limit for testing
 
-    augment_dataset(args.json_dir, args.image_root, args.out_root, pipelines, limit=limit)
+    # Example: combine up to 2 pipelines (e.g., flip + color_jitter)
+    augment_dataset(args.json_dir, args.image_root, args.out_root, pipelines, limit=limit, max_combinations=2)

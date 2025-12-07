@@ -1,19 +1,7 @@
-"""Training script for the Chicken Counting model.
-
-Features:
-- Builds a simple dataset from `DatasetLoader` (uses the existing LabelMe-style JSONs)
-- Generates Gaussian density maps from annotated points
-- Training loop with AdamW, CurriculumLoss, validation (MAE/RMSE)
-- Checkpoint saving to `checkpoints/`
-
-Note: This script intentionally does not modify your augmentation code; it uses
-images as provided (you can pre-run augmentation pipeline to create `data/augmented`).
-"""
 import argparse
 import sys
 from pathlib import Path
 import math
-import json
 from typing import List, Tuple
 
 import numpy as np
