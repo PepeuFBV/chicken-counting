@@ -37,7 +37,10 @@ def run_inference(weights: str, data_dir: str, out_dir: str, device: str = "auto
     device = torch.device(device)
     model = ChickenCountingModel(pretrained=False).to(device)
     if weights:
+        print(f"Loading weights from: {weights}")
         load_checkpoint(weights, model, map_location=device.type)
+    else:
+        print("WARNING: No weights provided! Using randomly initialized model (predictions will be meaningless).")
 
     loader = DatasetLoader(data_dir, load_images=False)
     out_root = Path(out_dir)
@@ -79,7 +82,7 @@ def run_inference(weights: str, data_dir: str, out_dir: str, device: str = "auto
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--weights", default=None)
+    parser.add_argument("--weights", default="checkpoints/model_best.pth", help="Path to model checkpoint (default: checkpoints/model_best.pth)")
     parser.add_argument("--data_dir", default="data/dataset")
     parser.add_argument("--out_dir", default="outputs")
     parser.add_argument("--device", default="auto", help="device to run on, e.g. 'cpu', 'cuda', or 'cuda:0'. Use 'auto' to select CUDA when available")
