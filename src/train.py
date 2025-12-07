@@ -82,7 +82,8 @@ class ChickenDataset(Dataset):
 
         img_t = self.transform(img_resized)
 
-        den = generate_density_map(scaled_points, self.crop_size, self.crop_size, sigma=4.0)
+        sigma = 4.0
+        den = generate_density_map(scaled_points, self.crop_size, self.crop_size, sigma=sigma)
         den_t = torch.from_numpy(den).unsqueeze(0)
 
         return img_t, den_t, len(points)
