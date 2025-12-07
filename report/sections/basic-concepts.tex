@@ -1,3 +1,55 @@
-\section{Basic Concepts}
+\section{Background and Related Work}
 
-TODO: Write basic concepts.
+\subsection{Object Counting Paradigms}
+
+Visual object counting methods generally fall into two categories: \textit{detection-based} and \textit{density-estimation-based} approaches \cite{single_image_crowd_counting}.
+
+Detection-based methods apply object detectors (e.g., Faster R-CNN, YOLO, RetinaNet) to localize individual instances and count detections. While effective in sparse scenes, these methods struggle with heavy occlusion, small object sizes, and densely packed arrangements common in poultry environments where hundreds of chickens may overlap in a single frame while varying in scale and illumination.
+
+Density-estimation methods regress a continuous 2D density map where each pixel value represents local object density. The total count is obtained by integrating (summing) the density map. This approach has proven more robust in crowded scenes since it does not require explicit instance segmentation. The density map is typically generated from point annotations using Gaussian kernels centered at each object location. The approach was used by the article "Automated pig counting using deep learning" \cite{automated_pig_counting} for pig counting, demonstrating its effectiveness in livestock monitoring.
+
+\subsection{Density Map Generation}
+
+Given point annotations $\{(x_i, y_i)\}_{i=1}^N$ representing object centers, a ground-truth density map $D_{gt} \in \mathbb{R}^{H \times W}$ is constructed as:
+
+\begin{equation}
+    D_{gt}(x,y) = \sum_{i=1}^N G_{\sigma}((x,y) - (x_i, y_i))
+\end{equation}
+
+Where $G_{\sigma}$ is a Gaussian kernel with standard deviation $\sigma$. The sum $\sum_{x,y} D_{gt}(x,y) = N$ preserves the object count. Adaptive kernel sizes based on nearest-neighbor distances can improve accuracy in varying density regions \cite{single_image_crowd_counting}.
+
+\subsection{Vision Transformers for Dense Prediction}
+
+Traditional CNN backbones (ResNet, VGG) have limited receptive fields and struggle to capture long-range dependencies. Vision Transformers (ViT) \cite{vit} apply self-attention mechanisms to model global context but are computationally expensive for dense prediction tasks requiring high-resolution feature maps.
+
+Pyramid Vision Transformer (PVT) \cite{pvt} addresses this by introducing a hierarchical architecture that produces multi-scale pyramid features similar to CNNs. PVT-v2 \cite{pvt_v2} further improves efficiency with spatial-reduction attention (SRA), reducing computational complexity from $O(N^2)$ to $O(N^2/R)$ where $R$ is the reduction ratio.
+
+Key PVT-v2 characteristics:
+\begin{itemize}
+    \item Multi-scale pyramid features at 4 stages with progressively decreasing spatial resolution
+    \item Overlapping patch embedding for better local continuity
+    \item Spatial reduction attention for computational efficiency
+    \item Compatible with existing dense prediction heads (FPN, U-Net, etc.)
+\end{itemize}
+
+\subsection{Loss Functions for Density Estimation}
+
+Counting Loss ($L_{count}$): Simple $L_1$ or $L_2$ distance between predicted and ground-truth total counts:
+\begin{equation}
+    L_{count} = ||\text{sum}(D_{pred}) - \text{sum}(D_{gt})||_1
+\end{equation}
+
+Total Variation Loss ($L_{TV}$): Encourages spatial smoothness by penalizing large gradients:
+\begin{equation}
+    L_{TV} = \sum_{x,y} |D(x+1,y) - D(x,y)| + |D(x,y+1) - D(x,y)|
+\end{equation}
+
+Optimal Transport (OT) Loss: Measures the minimum cost of transforming the predicted distribution into the ground-truth distribution. Using entropic regularization (Sinkhorn algorithm), OT loss encourages spatial alignment between predicted and ground-truth density patterns \cite{ot_loss_counting}:
+\begin{equation}
+    L_{OT} = \min_{\Pi \in \mathcal{U}(a,b)} \langle \Pi, M \rangle + \epsilon H(\Pi)
+\end{equation}
+where $M$ is the pairwise distance matrix, $\mathcal{U}(a,b)$ is the set of transport plans between distributions $a$ and $b$, and $H(\Pi)$ is entropic regularization.
+
+\subsection{Pyramid Feature Aggregation}
+
+Feature Pyramid Networks (FPN) \cite{fpn} combine multi-scale features through lateral connections and top-down pathways. In the context of density estimation, aggregating features from different pyramid levels allows the model to capture both fine-grained details (chickens at various scales) and global context (spatial arrangement, environmental structure, lighting conditions).
