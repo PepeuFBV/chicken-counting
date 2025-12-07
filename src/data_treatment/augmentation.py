@@ -277,4 +277,6 @@ if __name__ == "__main__":
         [{"name": "noise", "sigma": 8.0}],
     ]
 
-    augment_dataset(args.json_dir, args.image_root, args.out_root, pipelines, limit=50)
+    limit = 50  # limit for testing
+
+    augment_dataset(args.json_dir, args.image_root, args.out_root, pipelines, limit=limit)
