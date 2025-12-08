@@ -244,11 +244,16 @@ def augment_dataset(json_dir: str, image_root: str, out_root: str, ops_list: Lis
     `ops_list` is a list of op sequences; for each json, each ops sequence will be applied producing one augmented sample.
     """
     os.makedirs(out_root, exist_ok=True)
-    files = [f for f in os.listdir(json_dir) if f.lower().endswith('.json')]
+    # collect JSON files recursively so nested dataset layouts are supported
+    json_paths: List[str] = []
+    for root, _, filenames in os.walk(json_dir):
+        for fname in sorted(filenames):
+            if fname.lower().endswith('.json'):
+                json_paths.append(os.path.join(root, fname))
     if limit is not None:
-        files = files[:limit]
-    for fname in files:
-        json_path = os.path.join(json_dir, fname)
+        json_paths = json_paths[:limit]
+    for json_path in json_paths:
+        fname = os.path.basename(json_path)
         # build list of operation sequences to apply. By default (max_combinations=1)
         # we use the provided `ops_list` as-is. If `max_combinations` > 1, we
         # generate ordered combinations (cartesian product) of up to
@@ -281,7 +286,11 @@ def augment_dataset(json_dir: str, image_root: str, out_root: str, ops_list: Lis
 
         for ops in unique_ops:
             try:
-                augment_single(json_path, image_root, out_root, ops)
+                # use the JSON parent directory as the image root so relative
+                # `imagePath` fields continue to resolve correctly for nested
+                # dataset layouts
+                local_image_root = os.path.dirname(json_path)
+                augment_single(json_path, local_image_root, out_root, ops)
             except Exception as e:
                 print(f"Failed augment {fname} with {ops}: {e}")
 

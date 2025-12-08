@@ -171,42 +171,6 @@ The script will:
 - **MAPE (Mean Absolute Percentage Error)**: Average percentage error
 - **R²**: Coefficient of determination (1.0 = perfect, 0 = baseline)
 
-## Project Structure
-
-```
-chicken-counting/
-├── run_train.sh              # Quick training launcher script
-├── requirements.txt          # Python dependencies
-├── README.md                 # This file
-├── data/
-│   ├── dataset/             # Input images and annotations
-│   ├── augmented/           # Augmented data (optional)
-│   └── examples-dataloader/ # Example outputs
-├── src/
-│   ├── train.py             # Training script
-│   ├── inference.py         # Inference script
-│   ├── model/
-│   │   ├── chicken_model.py # Main model architecture
-│   │   ├── losses.py        # Curriculum loss implementation
-│   │   ├── modules.py       # PFA and MDC modules
-│   │   └── checkpoint.py    # Checkpoint loading utilities
-│   └── data_treatment/
-│       ├── dataset_loader.py # Dataset loading from LabelMe JSON
-│       └── main.py          # Data preprocessing utilities
-├── scripts/
-│   ├── compute_stats.py     # Analysis and metrics computation
-│   └── activate_venv.sh     # Virtual environment activation helper
-├── checkpoints/             # Saved model checkpoints
-│   ├── model_best.pth       # Best model (lowest validation MAE)
-│   └── model_epoch_N.pth    # Checkpoint after epoch N
-└── outputs/                 # Inference outputs
-    ├── [id]_density.npy     # Predicted density maps
-    ├── [id]_density.png     # Density visualizations
-    ├── results.json         # Prediction summary
-    ├── stats_per_image.csv  # Per-image analysis results
-    └── gt_vs_pred.png       # Scatter plot of predictions
-```
-
 ## Typical Workflow
 
 1. **Prepare dataset** → Place images and LabelMe annotations in `data/dataset/`

@@ -8,7 +8,7 @@ PROJ_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJ_ROOT))
 
 from src.data_treatment.dataset_loader import DatasetLoader
-from src.data_treatment.augmentation import augment_single
+from src.data_treatment.augmentation import augment_dataset
 
 
 def default_pipelines() -> List[List[dict]]:
@@ -64,68 +64,15 @@ def preprocess_and_get_loader(
     total = len(loader)
     print(f"Found {total} annotation files in {data_dir}")
 
-    processed = 0
-    total_augmented = 0
-    # determine how many samples we'll process for the progress display
-    target = total if limit is None else min(total, limit)
-
-    def _print_loader(cur: int, total_target: int, name: str, augmented: int) -> None:
-        """Print a compact in-place progress bar showing current progress.
-
-        Uses carriage-return to overwrite the line so output looks like a loader.
-        """
-        bar_len = 30
-        frac = (cur / total_target) if total_target > 0 else 0
-        filled = int(bar_len * frac)
-        if filled >= bar_len:
-            bar = "=" * bar_len
-        else:
-            bar = "=" * max(0, filled) + ">" + " " * max(0, bar_len - filled - 1)
-
-        percent = int(frac * 100)
-        show_current_augmented = False
-        current_augmented = f"{name}: generated {augmented} augmented files"
-
-        # always show the bar; optionally append the per-file augmented message
-        base = f"\r[{bar}] {percent:3d}% {cur}/{total_target}"
-        if show_current_augmented:
-            base = f"{base} {current_augmented}"
-
-        print(base, end="", flush=True)
-        
-    for i, sample in enumerate(loader):
-        if limit is not None and processed >= limit:
-            break
-
-        json_path = sample.get("json_path")
-        if json_path is None:
-            continue
-
-        # image_root: use JSON parent dir so relative imagePath resolves
-        image_root = str(json_path.parent)
-
-        # count augmented outputs produced for this sample
-        per_image_augmented = 0
-        for ops in pipelines:
-            try:
-                augment_single(str(json_path), image_root, str(out_root), ops)
-                per_image_augmented += 1
-                total_augmented += 1
-            except Exception as e:
-                # ensure failure message appears on its own line
-                print()
-                print(f"Failed augment {json_path} with {ops}: {e}")
-
-        # update loader (processed is 0-based; show human-friendly 1-based count)
-        _print_loader(processed + 1, target, json_path.name, per_image_augmented)
-        print()
-
-        processed += 1
-
-    print(f"Processed {processed} samples. Total augmented files generated: {total_augmented}.")
+    # delegate to augment_dataset which handles applying pipelines to all
+    # JSONs. augment_dataset now scans recursively and uses each JSON's parent
+    # folder as the image root so relative `imagePath` fields continue to work.
+    augment_dataset(str(data_dir), str(data_dir), str(out_root), pipelines, limit=limit, max_combinations=1)
 
     # return a loader pointed at augmented folder
-    return DatasetLoader(out_root, load_images=False)
+    augmented_loader = DatasetLoader(out_root, load_images=False)
+    print(f"Processed {min(total, limit) if limit is not None else total} samples. Total augmented files generated: {len(augmented_loader)}.")
+    return augmented_loader
 
 
 def main() -> None:
