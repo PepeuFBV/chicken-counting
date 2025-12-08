@@ -126,6 +126,30 @@ Extensive augmentation improves robustness and generalization:
 
 A pipeline that composes two augmentations per image is applied, increasing dataset diversity while preserving annotation consistency. As a result, the original 147 images were expanded to 13,377 images after augmentation. All augmentations preserve point annotations by applying corresponding coordinate transformations.
 
+\subsection{Dataset Statistics}
+
+The dataset comprises 147 images of poultry farm environments with point annotations for each visible chicken. Dataset characteristics are summarized below:
+
+\begin{table}[h]
+    \centering
+    \caption{Dataset Statistics}
+    \begin{tabular}{@{}lc@{}}
+        \toprule
+        \textbf{Metric}          & \textbf{Value}     \\
+        \midrule
+        Total images             & 147                \\
+        Total augmented images   & 13,377             \\
+        Training images (80\%)   & 10,701             \\
+        Validation images (20\%) & 2,676              \\
+        Avg. chickens per image  & $\sim$62           \\
+        Min/Max count per image  & 54 / 68            \\
+        Image resolution         & Resized to 256×256 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Images exhibit typical poultry-farm challenges: dense crowding, partial occlusion, varying illumination, and perspective distortion.
+
 \subsection{Training Strategy}
 
 \subsubsection{Loss Function}
