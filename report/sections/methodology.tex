@@ -1,3 +1,190 @@
 \section{Methodology}
 
-Describe the approach, dataset, model architecture, and training details here.
+This section describes the complete implementation of the PVT-based chicken counting system, including model architecture, dataset preparation, dataset augmentation strategy and implementation, training strategy, and inference pipeline.
+
+\subsection{Model Architecture}
+
+The overall architecture follows the original paper \cite{pvt_chicken} with three main components: PVT backbone, Pyramid Feature Aggregation (PFA), and Multi-Scale Dilated Convolution (MDC) head.
+
+\subsubsection{PVT-v2-B2 Backbone}
+
+The backbone is a Pyramid Vision Transformer v2 with B2 configuration (medium scale), implemented via the \texttt{timm} library \cite{timm}. Key parameters:
+\begin{itemize}
+    \item Input resolution: $256 \times 256 \times 3$
+    \item Four pyramid stages with output resolutions: $64\times64$, $32\times32$, $16\times16$, $8\times8$
+    \item Channel dimensions: $[64, 128, 320, 512]$ for stages 1-4
+    \item Spatial reduction ratios: $[8, 4, 2, 1]$ for attention efficiency
+    \item Pretrained weights: Not used in this implementation (trained from scratch)
+\end{itemize}
+
+The PVT backbone extracts hierarchical features $\{f_1, f_2, f_3, f_4\}$ where $f_1$ has highest spatial resolution and $f_4$ has richest semantic information.
+
+\subsubsection{Pyramid Feature Aggregation (PFA)}
+
+The PFA module aggregates multi-scale features using a top-down architecture inspired by FPN:
+
+\begin{enumerate}
+    \item Lateral connections: $1\times1$ convolutions project each feature $f_i$ to unified channel dimension (256):
+          \begin{equation}
+              l_i = \text{Conv}_{1\times1}(f_i), \quad i \in \{1,2,3,4\}
+          \end{equation}
+
+    \item Top-down pathway: Starting from the deepest feature $l_4$, iteratively upsample and fuse:
+          \begin{equation}
+              m_i = l_i + \text{Upsample}(m_{i+1}), \quad i \in \{3,2,1\}
+          \end{equation}
+          where $m_4 = l_4$ and upsampling uses bilinear interpolation.
+
+    \item Smoothing: A $3\times3$ convolution with BatchNorm and ReLU reduces aliasing:
+          \begin{equation}
+              \text{PFA}_{\text{out}} = \text{Conv}_{\text{3×3}}(m_1)
+          \end{equation}
+\end{enumerate}
+
+Output: Aggregated feature map of size $64\times64\times256$ (1/4 of input resolution).
+
+\subsubsection{Multi-Scale Dilated Convolution (MDC) Head}
+
+The MDC head captures multi-scale contextual information through parallel dilated convolutions:
+
+\begin{enumerate}
+    \item Initial projection: $3\times3$ conv reduces channels to 128:
+          \begin{equation}
+              h_0 = \text{Conv}_{\text{3×3}}(\text{PFA}_{\text{out}})
+          \end{equation}
+
+    \item Parallel dilated branches: Three branches with dilation rates $\{1, 2, 3\}$:
+          \begin{align}
+              h_1 & = \text{Conv}_{\text{3×3, d=1}}(h_0) \\
+              h_2 & = \text{Conv}_{\text{3×3, d=2}}(h_0) \\
+              h_3 & = \text{Conv}_{\text{3×3, d=3}}(h_0)
+          \end{align}
+          Each branch has 128 output channels with BatchNorm and ReLU.
+
+    \item Feature fusion: Concatenate and fuse:
+          \begin{equation}
+              h_{\text{fused}} = \text{Conv}_{\text{3×3}}(\text{concat}([h_1, h_2, h_3]))
+          \end{equation}
+
+    \item Density regression: $1\times1$ conv produces single-channel density map:
+          \begin{equation}
+              D_{\text{coarse}} = \text{ReLU}(\text{Conv}_{\text{1×1}}(h_{\text{fused}}))
+          \end{equation}
+
+    \item Upsampling: Bilinear interpolation to input resolution:
+          \begin{equation}
+              D_{\text{pred}} = \text{Upsample}(D_{\text{coarse}}, 256\times256)
+          \end{equation}
+\end{enumerate}
+
+The ReLU activation ensures non-negative density values. Final count: $\hat{N} = \sum_{x,y} D_{\text{pred}}(x,y)$.
+
+\subsection{Dataset Preparation}
+
+\subsubsection{Annotation Format}
+
+Images are annotated using the LabelMe software \cite{labelme_website} with point annotations. Each annotation JSON contains:
+
+\begin{itemize}
+    \item \texttt{imagePath}: relative path to image file
+    \item \texttt{shapes}: list of point annotations with \texttt{label="chicken"}
+    \item Each point: $[\text{x}, \text{y}]$ coordinates in image space
+\end{itemize}
+
+The \texttt{DatasetLoader} class scans directories recursively for JSON files and extracts point coordinates.
+
+\subsubsection{Density Map Generation}
+
+Ground-truth density maps are generated on-the-fly during training:
+
+\begin{enumerate}
+    \item Resize image to $256\times256$
+    \item Scale point coordinates proportionally
+    \item Place unit mass at each scaled point location
+    \item Apply Gaussian filter with $\sigma=4.0$ pixels
+\end{enumerate}
+
+This ensures $\sum D_{gt} = N$ where $N$ is the annotated chicken count.
+
+\subsubsection{Data Augmentation}
+
+Extensive augmentation improves robustness and generalization:
+
+\textbf{Geometric transformations:}
+\begin{itemize}
+    \item Horizontal flip
+    \item Vertical flip
+    \item Random rotation: $\{15^\circ, 30^\circ, 45^\circ, \dots, 180^\circ\}$, in steps of $15^\circ$
+    \item Scale: $\{0.5, 0.75, 0.9, 1.1, 1.25, 1.5\}$
+\end{itemize}
+
+\textbf{Photometric transformations:}
+\begin{itemize}
+    \item Gaussian noise: $\sigma \in \{1.0, 2.0, 4.0, 8.0, 12.0\}$
+    \item Brightness, contrast and saturation jitter: values in \{0.2, 0.4, 0.6, 0.8\} (uniformly sampled per attribute).
+\end{itemize}
+
+A pipeline that composes two augmentations per image is applied, increasing dataset diversity while preserving annotation consistency. As a result, the original 147 images were expanded to 13,377 images after augmentation. All augmentations preserve point annotations by applying corresponding coordinate transformations.
+
+\subsection{Training Strategy}
+
+\subsubsection{Loss Function}
+
+The curriculum loss combines three components with scheduled weighting:
+
+\begin{equation}
+    \mathcal{L} = L_{\text{count}} + \alpha(t) \cdot L_{\text{OT}} + \beta(t) \cdot L_{\text{TV}}
+\end{equation}
+
+where $t = \text{epoch} / \text{max\_epochs}$ is the training progress and:
+\begin{align}
+    \alpha(t) & = \lambda_{\text{OT}} \cdot t \\
+    \beta(t)  & = \lambda_{\text{TV}} \cdot t
+\end{align}
+
+Default hyperparameters: $\lambda_{\text{OT}} = 1.0$, $\lambda_{\text{TV}} = 1.0$.
+
+Curriculum rationale: Early training focuses on learning correct total counts ($L_{\text{count}}$). As training progresses, OT and TV losses gradually activate to refine spatial distribution and smoothness.
+
+Optimal Transport Implementation: To reduce computational cost, density maps are downsampled by factor 4 ($64\times64$ resolution) before computing pairwise distances. The Sinkhorn algorithm runs 50 iterations with entropic regularization $\epsilon=0.05$.
+
+\subsubsection{Optimization}
+
+\begin{itemize}
+    \item Optimizer: AdamW with weight decay $10^{-4}$
+    \item Learning rate: $10^{-5}$ (fixed)
+    \item Batch size: 6 (depending on GPU memory)
+    \item Epochs: 200
+    \item Normalization: ImageNet statistics (mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+\end{itemize}
+
+Training/validation split: 80/20 with fixed random seed (42) for reproducibility.
+
+\subsubsection{Implementation Details}
+
+\begin{itemize}
+    \item Framework: PyTorch 2.0+
+    \item Hardware: CUDA-enabled GPU (NVIDIA GeForce RTX 1650 with 4GB VRAM)
+    \item Checkpoint saving: Every epoch + best validation MAE model
+    \item Validation metrics: MAE and RMSE computed on predicted vs ground-truth counts
+\end{itemize}
+
+\subsection{Inference Pipeline}
+
+The inference script processes images through the trained model:
+\begin{enumerate}
+    \item Load image and resize to $256\times256$
+    \item Apply ImageNet normalization
+    \item Forward pass through model to obtain density map $D_{\text{pred}}$
+    \item Compute count: $\hat{N} = \sum D_{\text{pred}}$
+    \item Save density map as NumPy array and heatmap visualization
+\end{enumerate}
+
+Outputs include JSON file with per-image counts and visualizations showing predicted density distributions.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.25\textwidth]{density-example.png}
+    \caption{Example of predicted density map heatmap. Brighter regions indicate higher predicted chicken density.}
+    \label{fig:density_example}
+\end{figure}
