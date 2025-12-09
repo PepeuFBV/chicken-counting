@@ -1,3 +1,88 @@
 \section{Future Work}
 
-TODO: Write future work.
+Several promising directions could extend this work and address current limitations:
+
+\subsection{Model Improvements}
+
+\subsubsection{Multi-Scale Inference}
+
+Rather than resizing all images to 256×256, a multi-scale testing strategy could:
+
+\begin{itemize}
+    \item Process images at multiple resolutions (e.g., 256, 384, 512)
+    \item Average predictions across scales
+    \item Preserve fine-grained details in high-resolution images
+    \item Improve accuracy on images with small or distant chickens
+\end{itemize}
+
+\subsubsection{Lightweight Architectures}
+
+For edge deployment (on-device cameras), exploring efficient models:
+
+\begin{itemize}
+    \item PVT-v2-B0 or B1 (smaller variants) for reduced parameters
+    \item Knowledge distillation from current model to compact student
+    \item Quantization (INT8) and pruning for faster inference
+    \item MobileViT or EfficientFormer alternatives
+\end{itemize}
+
+\subsection{Training Enhancements}
+
+\subsubsection{Semi-Supervised Learning}
+
+Reduce annotation burden by leveraging unlabeled data:
+
+\begin{itemize}
+    \item Self-training with pseudo-labels on unlabeled images
+    \item Contrastive learning for feature representation
+    \item Active learning to select most informative samples for annotation
+\end{itemize}
+
+\subsection{Dataset Expansion}
+
+\subsubsection{Multi-Farm Dataset}
+
+Collect data from diverse poultry farms to improve generalization:
+
+\begin{itemize}
+    \item Different chicken breeds (broilers, layers, heritage breeds)
+    \item Varying farm sizes (small-scale to industrial)
+    \item Multiple camera setups (overhead, side-view, multi-view)
+    \item Different time periods (morning/afternoon/evening lighting)
+    \item Seasonal variations (summer/winter conditions)
+\end{itemize}
+
+\subsubsection{Density Heatmap Analysis}
+
+Leverage spatial density information:
+
+\begin{itemize}
+    \item Identify overcrowded regions for welfare interventions
+    \item Analyze spatial distribution patterns (clustering, dispersion)
+    \item Optimize feeder and water placement based on occupancy
+    \item Detect environmental issues (ventilation, heating zones)
+\end{itemize}
+
+\subsubsection{Predictive Analytics}
+
+Use counting data for forecasting:
+
+\begin{itemize}
+    \item Predict mortality rates from population trends
+    \item Forecast feed consumption based on flock size
+    \item Estimate growth rates and harvest timing
+    \item Optimize stocking density for welfare and productivity
+\end{itemize}
+
+\subsection{Cross-Domain Transfer}
+
+\subsubsection{Other Livestock}
+
+Adapt the system to other animals:
+
+\begin{itemize}
+    \item Sheep counting in pastures (outdoor, complex backgrounds)
+    \item Cattle monitoring in feedlots
+    \item Pig counting in indoor facilities
+    \item Fish counting in aquaculture (underwater environments)
+\end{itemize}
