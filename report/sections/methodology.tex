@@ -91,7 +91,14 @@ Images are annotated using the LabelMe software \cite{labelme_website} with poin
     \item Each point: $[\text{x}, \text{y}]$ coordinates in image space
 \end{itemize}
 
-The \texttt{DatasetLoader} class scans directories recursively for JSON files and extracts point coordinates.
+See Figure \ref{fig:labelme_example} for an example annotation.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.35\textwidth]{labelme-example.png}
+    \caption{Example of a LabelMe annotation with point labels for chicken locations.}
+    \label{fig:labelme_example}
+\end{figure}
 
 \subsubsection{Density Map Generation}
 
@@ -104,13 +111,21 @@ Ground-truth density maps are generated on-the-fly during training:
     \item Apply Gaussian filter with $\sigma=4.0$ pixels
 \end{enumerate}
 
-This ensures $\sum D_{gt} = N$ where $N$ is the annotated chicken count.
+This ensures $\sum D_{gt} = N$ where $N$ is the annotated chicken count. See Figure \ref{fig:density_example} for a sample density map.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.25\textwidth]{density-example.png}
+    \caption{Example of predicted density map heatmap. Brighter regions indicate higher predicted chicken density.}
+    \label{fig:density_example}
+\end{figure}
 
 \subsubsection{Data Augmentation}
 
 Extensive augmentation improves robustness and generalization:
 
-\textbf{Geometric transformations:}
+Geometric transformations:
+
 \begin{itemize}
     \item Horizontal flip
     \item Vertical flip
@@ -118,7 +133,8 @@ Extensive augmentation improves robustness and generalization:
     \item Scale: $\{0.5, 0.75, 0.9, 1.1, 1.25, 1.5\}$
 \end{itemize}
 
-\textbf{Photometric transformations:}
+Photometric transformations:
+
 \begin{itemize}
     \item Gaussian noise: $\sigma \in \{1.0, 2.0, 4.0, 8.0, 12.0\}$
     \item Brightness, contrast and saturation jitter: values in \{0.2, 0.4, 0.6, 0.8\} (uniformly sampled per attribute).
@@ -141,7 +157,7 @@ The dataset comprises 147 images of poultry farm environments with point annotat
         Total augmented images   & 13,377             \\
         Training images (80\%)   & 10,701             \\
         Validation images (20\%) & 2,676              \\
-        Avg. chickens per image  & $\sim$62           \\
+        Avg. chickens per image  & $\sim$63           \\
         Min/Max count per image  & 54 / 68            \\
         Image resolution         & Resized to 256×256 \\
         \bottomrule
@@ -205,10 +221,3 @@ The inference script processes images through the trained model:
 \end{enumerate}
 
 Outputs include JSON file with per-image counts and visualizations showing predicted density distributions.
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.25\textwidth]{density-example.png}
-    \caption{Example of predicted density map heatmap. Brighter regions indicate higher predicted chicken density.}
-    \label{fig:density_example}
-\end{figure}
