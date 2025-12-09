@@ -28,13 +28,11 @@ The PFA module aggregates multi-scale features using a top-down architecture ins
           \begin{equation}
               l_i = \text{Conv}_{1\times1}(f_i), \quad i \in \{1,2,3,4\}
           \end{equation}
-
     \item Top-down pathway: Starting from the deepest feature $l_4$, iteratively upsample and fuse:
           \begin{equation}
               m_i = l_i + \text{Upsample}(m_{i+1}), \quad i \in \{3,2,1\}
           \end{equation}
           where $m_4 = l_4$ and upsampling uses bilinear interpolation.
-
     \item Smoothing: A $3\times3$ convolution with BatchNorm and ReLU reduces aliasing:
           \begin{equation}
               \text{PFA}_{\text{out}} = \text{Conv}_{\text{3×3}}(m_1)
