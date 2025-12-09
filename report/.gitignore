@@ -1,0 +1,24 @@
+# LaTeX build artifacts — safe to ignore
+*.aux
+*.bbl
+*.blg
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.log
+*.out
+
+# PDFs: ignore compiled PDFs by default. If you want to track final/accepted PDFs,
+# remove this line or add the specific filename to the repo.
+*.pdf
+
+# Editor and OS temporary files
+*~
+*.bak
+.#*
+*.swp
+.DS_Store
+.fuse*

@@ -1,0 +1,42 @@
+\documentclass[conference]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{hyphenat}
+
+\usepackage{graphicx}
+\graphicspath{ {./images/} }
+
+\usepackage{fancyhdr}
+\newcommand{\reporttitle}{Reproducing "Transforming Poultry Farming": Pyramid Vision Transformer for Accurate Chicken Counting}
+\pagestyle{fancy}
+\fancyhf{} % clear header/footer
+\renewcommand{\headrulewidth}{0pt}
+\fancyhead[L]{\small\textit{\reporttitle}}
+\fancyhead[R]{\small\thepage}
+
+\title{\reporttitle}
+\author{Pedro Figueira Bôa-Viagem, \textit{Student}, UFRPE}
+\date{\today}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\input{sections/abstract}
+
+\input{sections/introduction}
+\input{sections/basic-concepts}
+\input{sections/methodology}
+\input{sections/results}
+\input{sections/conclusion}
+\input{sections/future-work}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\input{sections/appendix}
+
+\end{document}
