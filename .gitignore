@@ -68,3 +68,6 @@ docs/
 # Python virtual environments
 venv/
 .venv/
+
+# Generated CSV files
+*.csv
