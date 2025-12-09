@@ -4,7 +4,7 @@ Automatic chicken counting in poultry farms using deep learning. Based on the pa
 
 > **"Transforming Poultry Farming: A Pyramid Vision Transformer Approach for Accurate Chicken Counting"**  
 > _Sensors 2024, 24, 2977_  
-> DOI: [10.3390/s24092977](https://doi.org/10.3390/s24092977)
+> DOI: [10.3390/s24102977](https://doi.org/10.3390/s24102977)
 
 ## About the Project
 
