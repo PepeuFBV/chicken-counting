@@ -3,7 +3,6 @@ import sys
 import argparse
 from pathlib import Path
 
-# add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from PIL import Image, ImageDraw, ImageFont
@@ -18,8 +17,7 @@ def draw_points_on_image(img, points, color=(255, 0, 0), radius=5):
     img_copy = img.copy()
     draw = ImageDraw.Draw(img_copy)
     
-    for x, y in points:
-        # Draw circle
+    for x, y in points: # circle
         draw.ellipse(
             [x - radius, y - radius, x + radius, y + radius],
             fill=color,
@@ -38,11 +36,9 @@ def test_augmentation(image_path, json_path=None):
         image_path: Path to image file
         json_path: Optional path to JSON annotation file
     """
-    # Load image
     img = load_image(image_path)
     img_name = Path(image_path).stem
     
-    # Load points if JSON is provided
     points = []
     if json_path and os.path.exists(json_path):
         data = load_json(json_path)
@@ -64,7 +60,6 @@ def test_augmentation(image_path, json_path=None):
         ("noise", lambda i, p: (add_noise(i, 25.0), p)),
     ]
     
-    # Create output directory
     output_dir = Path(__file__).parent.parent / "data" / "test-augmentations" / img_name
     output_dir.mkdir(parents=True, exist_ok=True)
     
@@ -74,10 +69,8 @@ def test_augmentation(image_path, json_path=None):
     
     for name, aug_func in augmentations:
         try:
-            # Apply augmentation
             aug_img, aug_points = aug_func(img, points)
             
-            # Draw points if available
             if aug_points:
                 aug_img_with_points = draw_points_on_image(aug_img, aug_points)
                 point_count = len(aug_points)
@@ -85,7 +78,6 @@ def test_augmentation(image_path, json_path=None):
                 aug_img_with_points = aug_img
                 point_count = 0
             
-            # Save image
             output_path = output_dir / f"{name}.jpg"
             aug_img_with_points.save(output_path, quality=95)
             
@@ -109,7 +101,6 @@ def test_combinations(image_path, json_path=None):
         data = load_json(json_path)
         points = [p for p in _extract_points(data.get("shapes", [])) if p is not None]
     
-    # Test some interesting combinations
     combinations = [
         ("flip_h_rotate_90", [
             lambda i, p: flip_horizontal(i, p),
@@ -129,11 +120,9 @@ def test_combinations(image_path, json_path=None):
         ]),
     ]
     
-    # Create output directory
     output_dir = Path(__file__).parent.parent / "data" / "test-augmentations" / f"{img_name}_combinations"
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    # Save original
     orig_img_with_points = draw_points_on_image(img, points) if points else img
     orig_path = output_dir / "original.jpg"
     orig_img_with_points.save(orig_path, quality=95)
@@ -153,7 +142,6 @@ def test_combinations(image_path, json_path=None):
             
             aug_img_with_points = draw_points_on_image(current_img, current_points) if current_points else current_img
             
-            # Save image
             output_path = output_dir / f"{name}.jpg"
             aug_img_with_points.save(output_path, quality=95)
             
@@ -196,16 +184,14 @@ Examples:
     
     args = parser.parse_args()
     
-    # Auto-find image if requested
     if args.auto:
         dataset_dir = Path(__file__).parent.parent / "data" / "dataset"
         if dataset_dir.exists():
-            # Find first image
             for ext in ['.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG']:
                 images = list(dataset_dir.rglob(f"*{ext}"))
                 if images:
                     args.image = str(images[0])
-                    # Try to find corresponding JSON
+
                     json_path = images[0].with_suffix('.json')
                     if json_path.exists():
                         args.json = str(json_path)
