@@ -79,9 +79,13 @@ The ReLU activation ensures non-negative density values. Final count: $\hat{N} =
 
 \subsection{Dataset Preparation}
 
+\subsubsection{Data Source}
+
+The dataset images were sourced from the "Chicken Dataset" Computer Vision Dataset \cite{chicken-dataset}. This dataset contains images of poultry farm environments with bounding box annotations for individual chickens. For this project, point annotations were created at the center of each bounding box to facilitate density map generation.
+
 \subsubsection{Annotation Format}
 
-Images are annotated using the LabelMe software \cite{labelme_website} with point annotations. Each annotation JSON contains:
+Images were re-annotated using the LabelMe software \cite{labelme_website} with point annotations. Each annotation JSON contains:
 
 \begin{itemize}
     \item \texttt{imagePath}: relative path to image file
