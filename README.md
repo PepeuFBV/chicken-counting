@@ -49,6 +49,10 @@ This project implements a complete training and inference system for counting ch
         Σ = Count
 ```
 
+## Final Report
+
+You can read the final report of this project [here](report/main.pdf).
+
 ## Quick Start
 
 ### 1. Setup Environment
