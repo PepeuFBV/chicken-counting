@@ -22,3 +22,6 @@
 *.swp
 .DS_Store
 .fuse*
+
+# don't ignore main PDF file
+!main.pdf
